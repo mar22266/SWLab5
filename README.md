@@ -1,2 +1,2 @@
 # SWLab5
-Laboratorio 5 de sistemas y tec web
+Laboratorio 5 GET Y POST al chat en el servidor

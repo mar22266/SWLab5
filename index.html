@@ -6,7 +6,7 @@
 <body>
   <script type="application/javascript">
     //Andre Marroquin, 22266
-    // Objeto de configuración para el titulo
+    // Objeto para el titulo
     const titleConfig = {
       textContent: 'CHAT',
       color: '#000000',
@@ -60,7 +60,7 @@
       // Calcula la altura disponible para el contenedor de mensajes
       const availableHeight = windowHeight - inputContainerTop - inputContainerHeight - 20; 
       // Establece la altura maxima del contenedor de mensajes ul
-      ul.style.maxHeight = `${Math.max(availableHeight, 530)}px`; // Establece una altura mínima de 100px
+      ul.style.maxHeight = `${Math.max(availableHeight, 530)}px`;
     }
     adjustUlHeight();
     window.addEventListener('resize', adjustUlHeight);
@@ -114,7 +114,7 @@
     document.body.style.margin = '0';
     document.body.style.padding = '20px';
 
-    // Función para aplicar el tema claro u oscuro
+    // funcion para aplicar el tema claro u oscuro
     function applyTheme(theme) {
       if (theme === 'dark') {
         document.body.style.backgroundColor = '#333';
@@ -194,27 +194,69 @@
         }
     });
 
-    const getMessages = async () => {
-      // Guarda la poscicion del scroll
-      const scrollTopBefore = ul.scrollTop;
-      // Guarda la altura total del contenedor 
-      const scrollHeightBefore = ul.scrollHeight;
-      const response = await fetch('https://chat.tiburoncin.lat/messages');
-      const messages = await response.json();
-      ul.innerHTML = ''; 
-      messages.forEach((message) => {
-          const li = document.createElement('li');
-          li.textContent = `${message.username}: ${message.message}`;
-          li.style.padding = '10px';
-          li.style.borderBottom = '1px solid #eee';
-          ul.appendChild(li);
-      });
-      // Aplica estilos a los mensajes después de cargarlos
-      styleMessages();
-      const scrollHeightAfter = ul.scrollHeight; 
-      const scrollTopAfter = scrollTopBefore + (scrollHeightAfter - scrollHeightBefore);
-      ul.scrollTop = scrollTopAfter; 
-    };
+    function formatMessage(message) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return message.replace(urlRegex, (url) => {
+        let displayUrl = url.length > 30 ? url.substring(0, 30) + '...' : url;
+        const imageRegex = /\.(gif|jpe?g|png|webp|bmp)$/i;
+
+        if (imageRegex.test(url)) {
+            // Creamos un contenedor div para el contenido HTML
+            const div = document.createElement('div');
+            const img = document.createElement('img');
+            img.src = url;
+            img.style.maxWidth = '200px';
+            img.style.maxHeight = '200px';
+            img.style.display = 'block';
+            img.style.marginTop = '10px';
+            div.appendChild(img);
+            return div.outerHTML;
+        } else {
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.textContent = displayUrl;
+            return a.outerHTML;
+        }
+    });
+    }   
+
+const getMessages = async () => {
+    // Guarda la posición del scroll
+    const scrollTopBefore = ul.scrollTop;
+    // Guarda la altura total del contenedor
+    const scrollHeightBefore = ul.scrollHeight;
+    const response = await fetch('https://chat.tiburoncin.lat/messages');
+    const messages = await response.json();
+    ul.innerHTML = ''; 
+
+    messages.forEach((message, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `${message.username}: ${formatMessage(message.message)}`; 
+        li.style.padding = '10px';
+        li.style.borderBottom = '1px solid #eee';
+
+        // Alternamos los colores de fondo de los mensajes
+        if (index % 2 === 0) {
+            li.style.backgroundColor = '#f0f0f0'; // Color blanco para mensajes pares
+            li.style.width = '1000%'; 
+            li.style.boxSizing = 'border-box'; 
+            li.style.padding = '20px';
+        } else {
+            li.style.backgroundColor = '#d0ebff'; // Color celeste para mensajes impares
+            li.style.width = '1000%'; 
+            li.style.boxSizing = 'border-box'; 
+            li.style.padding = '20px';
+        }
+
+        ul.appendChild(li);
+    });
+
+    // Ajusta el scroll para mantener la posicion despues de cargar los nuevos mensajes
+    const scrollHeightAfter = ul.scrollHeight;
+    const scrollTopAfter = scrollTopBefore + (scrollHeightAfter - scrollHeightBefore);
+    ul.scrollTop = scrollTopAfter;
+};
 
     // Obtener mensajes al cargar la pagina
     const postMessage = async () => {
